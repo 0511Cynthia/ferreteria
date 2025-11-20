@@ -25,19 +25,19 @@ def add_product_to_cart(id_producto, cantidad, id_carrito):
     try:
         conn = mysql.connector.connect(**get_db_config())
         cursor = conn.cursor()
-        # Verificar si ya existe ese producto en el carrito
-        query_check = "SELECT cantidad FROM carrito WHERE id_producto=%s AND id_carrito=%s"
+        # Verificar si ya existe ese producto en la nueva tabla carrito_items
+        query_check = "SELECT cantidad, id_item FROM carrito_items WHERE id_producto=%s AND id_carrito=%s"
         cursor.execute(query_check, (id_producto, id_carrito))
         row = cursor.fetchone()
         if row:
             # Actualizar cantidad
             nueva_cantidad = row[0] + cantidad
-            query_update = "UPDATE carrito SET cantidad=%s WHERE id_producto=%s AND id_carrito=%s"
-            cursor.execute(query_update, (nueva_cantidad, id_producto, id_carrito))
+            query_update = "UPDATE carrito_items SET cantidad=%s WHERE id_item=%s"
+            cursor.execute(query_update, (nueva_cantidad, row[1]))
         else:
-            # Insertar nuevo
-            query_insert = "INSERT INTO carrito (id_producto, cantidad, id_carrito) VALUES (%s, %s, %s)"
-            cursor.execute(query_insert, (id_producto, cantidad, id_carrito))
+            # Insertar nuevo en carrito_items
+            query_insert = "INSERT INTO carrito_items (id_carrito, id_producto, cantidad) VALUES (%s, %s, %s)"
+            cursor.execute(query_insert, (id_carrito, id_producto, cantidad))
         conn.commit()
         return True
     except Error as e:
@@ -49,13 +49,17 @@ def add_product_to_cart(id_producto, cantidad, id_carrito):
         if 'conn' in locals() and conn.is_connected():
             conn.close()
 
-def remove_from_cart(id_producto, id_carrito):
-    """Elimina un producto del carrito (tabla Carrito) por id_producto e id_carrito."""
+def remove_from_cart(id_item):
+    """Elimina un item del carrito en la tabla `carrito_items` por su `id_item`.
+
+    Parámetro:
+    - id_item: primary key (INT) de la tabla `carrito_items`.
+    """
     try:
         conn = mysql.connector.connect(**get_db_config())
         cursor = conn.cursor()
-        query = "DELETE FROM carrito WHERE id_producto=%s AND id_carrito=%s"
-        cursor.execute(query, (id_producto, id_carrito))
+        query = "DELETE FROM carrito_items WHERE id_item=%s"
+        cursor.execute(query, (id_item,))
         conn.commit()
         return cursor.rowcount > 0
     except Error as e:

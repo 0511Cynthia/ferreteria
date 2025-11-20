@@ -253,10 +253,10 @@ class CarritoWindow(QMainWindow):
             cursor = conn.cursor()
             # id_carrito fijo (ejemplo: 1)
             cursor.execute("""
-                SELECT p.nombre, p.precio, c.cantidad, c.id_producto
-                FROM carrito c
-                JOIN productos p ON c.id_producto = p.id_producto
-                WHERE c.id_carrito = %s
+                SELECT p.nombre, p.precio, ci.cantidad, ci.id_item
+                FROM carrito_items ci
+                JOIN productos p ON ci.id_producto = p.id_producto
+                WHERE ci.id_carrito = %s
             """, (1,))
             rows = cursor.fetchall()
         except Exception as e:
@@ -287,7 +287,7 @@ class CarritoWindow(QMainWindow):
         header.setLayout(header_layout)
         self.items_layout.addWidget(header)
 
-        for nombre, precio, cantidad, id_producto in rows:
+        for nombre, precio, cantidad, id_item in rows:
             row = QWidget()
             row_layout = QHBoxLayout()
             row_layout.setContentsMargins(10, 10, 10, 10)
@@ -316,16 +316,13 @@ class CarritoWindow(QMainWindow):
                     padding: 8px 12px;
                 }
             """)
-            def on_remove(checked=False, id_prod=id_producto):
+            def on_remove(checked=False, item_id=id_item):
                 try:
                     from db_logic import remove_from_cart
-                    # Elimina todas las filas de ese producto para el carrito actual
-                    while True:
-                        ok = remove_from_cart(id_prod, 1)
-                        if not ok:
-                            break
+                    # Elimina solo el item especificado (un registro)
+                    remove_from_cart(item_id)
                     self.refresh_cart()
-                except Exception as e:
+                except Exception:
                     pass
             btn_eliminar.clicked.connect(on_remove)
             row_layout.addWidget(btn_eliminar)
