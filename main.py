@@ -119,7 +119,7 @@ class LoginWindow(QMainWindow):
         main_layout.addWidget(self.login_button)
         
         # intentos permitidos
-        self.attempts_remaining = 2
+        self.attempts_remaining = 3
         
         main_layout.addSpacing(20)
         
