@@ -25,6 +25,15 @@ def add_product_to_cart(id_producto, cantidad, id_carrito):
     try:
         conn = mysql.connector.connect(**get_db_config())
         cursor = conn.cursor()
+        # Asegurar que exista el carrito referenciado por id_carrito.
+        # Si no existe, crear un nuevo carrito con id_usuario por defecto 1
+        # y usar su id generado.
+        cursor.execute("SELECT id_carrito FROM carritos WHERE id_carrito=%s", (id_carrito,))
+        carrito_row = cursor.fetchone()
+        if not carrito_row:
+            cursor.execute("INSERT INTO carritos (id_usuario) VALUES (%s)", (1,))
+            conn.commit()
+            id_carrito = cursor.lastrowid
         # Verificar si ya existe ese producto en la nueva tabla carrito_items
         query_check = "SELECT cantidad, id_item FROM carrito_items WHERE id_producto=%s AND id_carrito=%s"
         cursor.execute(query_check, (id_producto, id_carrito))
