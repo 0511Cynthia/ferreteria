@@ -247,9 +247,10 @@ class CarritoWindow(QMainWindow):
 
         # Obtener productos del carrito desde la base de datos
         try:
-            import mysql.connector
+            import pymysql
             from db_config import get_db_config
-            conn = mysql.connector.connect(**get_db_config())
+            cfg = get_db_config()
+            conn = pymysql.connect(host=cfg.get('host','localhost'), user=cfg.get('user'), password=cfg.get('password'), database=cfg.get('database'), port=int(cfg.get('port',3306)), connect_timeout=5)
             cursor = conn.cursor()
             # id_carrito fijo (ejemplo: 1)
             cursor.execute("""
@@ -264,9 +265,15 @@ class CarritoWindow(QMainWindow):
             error = str(e)
         finally:
             if 'cursor' in locals():
-                cursor.close()
-            if 'conn' in locals() and conn.is_connected():
-                conn.close()
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
+            if 'conn' in locals():
+                try:
+                    conn.close()
+                except Exception:
+                    pass
 
         if not rows:
             empty = QLabel("Tu carrito está vacío")

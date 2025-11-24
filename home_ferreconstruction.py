@@ -49,9 +49,10 @@ class HomeWindow(QMainWindow):
         
         # Productos desde la base de datos
         try:
-            import mysql.connector
+            import pymysql
             from db_config import get_db_config
-            conn = mysql.connector.connect(**get_db_config())
+            cfg = get_db_config()
+            conn = pymysql.connect(host=cfg.get('host','localhost'), user=cfg.get('user'), password=cfg.get('password'), database=cfg.get('database'), port=int(cfg.get('port',3306)), connect_timeout=5)
             cursor = conn.cursor()
             cursor.execute("SELECT nombre FROM productos")
             productos = [row[0] for row in cursor.fetchall()]
@@ -60,9 +61,15 @@ class HomeWindow(QMainWindow):
             error = str(e)
         finally:
             if 'cursor' in locals():
-                cursor.close()
-            if 'conn' in locals() and conn.is_connected():
-                conn.close()
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
+            if 'conn' in locals():
+                try:
+                    conn.close()
+                except Exception:
+                    pass
 
         productos_layout = QHBoxLayout()
         if productos:
@@ -241,21 +248,24 @@ class HomeWindow(QMainWindow):
         def on_add():
             try:
                 from db_logic import add_product_to_cart
-                import mysql.connector
+                import pymysql
                 # Buscar id_producto por nombre
+                cfg = __import__('db_config').get_db_config()
                 conn = None
                 id_producto = None
                 try:
-                    from db_config import get_db_config
-                    conn = mysql.connector.connect(**get_db_config())
+                    conn = pymysql.connect(host=cfg.get('host','localhost'), user=cfg.get('user'), password=cfg.get('password'), database=cfg.get('database'), port=int(cfg.get('port',3306)), connect_timeout=5)
                     cursor = conn.cursor()
                     cursor.execute("SELECT id_producto FROM productos WHERE nombre=%s", (nombre,))
                     row = cursor.fetchone()
                     if row:
                         id_producto = row[0]
                 finally:
-                    if conn and conn.is_connected():
-                        conn.close()
+                    if 'conn' in locals():
+                        try:
+                            conn.close()
+                        except Exception:
+                            pass
                 if not id_producto:
                     QMessageBox.warning(self, 'Error', f'No se encontró el producto en la base de datos.')
                     return

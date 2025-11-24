@@ -31,7 +31,7 @@ class LoginWindow(QMainWindow):
         logo_container.setLayout(logo_layout)
 
         #logo
-        logo_label = QLabel("🏗️")
+        logo_label = QLabel("🏗")
         logo_label.setAlignment(Qt.AlignCenter)
         logo_label.setStyleSheet("font-size: 60px; background-color: transparent; padding: 20px;")
         logo_layout.addWidget(logo_label)
@@ -123,7 +123,6 @@ class LoginWindow(QMainWindow):
         
         main_layout.addSpacing(20)
         
-    #función que redirije al home
     def login_clicked(self):
         username = self.username_input.text()
         password = self.password_input.text()
@@ -131,15 +130,28 @@ class LoginWindow(QMainWindow):
         try:
             from db_logic import validate_user
             valid = validate_user(username, password)
+        except ImportError as e:
+            print(f"ERROR: No se pudo importar db_logic - {e}")
+            QMessageBox.critical(self, 'Error de importación', f'No se pudo encontrar el módulo de base de datos:\n{e}')
+            return
         except Exception as e:
+            print(f"ERROR: Excepción en validate_user - {e}")
             QMessageBox.critical(self, 'Error de conexión', f'No se pudo conectar a la base de datos:\n{e}')
             return
 
         if valid:
-            from home_ferreconstruction import HomeWindow
-            self.home_window = HomeWindow()
-            self.home_window.show()
-            self.close()
+            try:
+                from home_ferreconstruction import HomeWindow
+                self.home_window = HomeWindow()
+                self.home_window.show()
+                self.close()
+                
+            except ImportError as e:
+                print(f"ERROR: No se pudo importar home_ferreconstruction - {e}")
+                QMessageBox.critical(self, 'Error', f'No se pudo encontrar la ventana principal:\n{e}')
+            except Exception as e:
+                print(f"ERROR: Excepción al crear HomeWindow - {e}")
+                QMessageBox.critical(self, 'Error', f'No se pudo abrir la ventana principal:\n{type(e).__name__}: {e}')
         else:
             # decrementar intentos
             self.attempts_remaining -= 1
