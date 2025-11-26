@@ -129,7 +129,7 @@ class LoginWindow(QMainWindow):
         # validar credenciales en la base de datos
         try:
             from db_logic import validate_user
-            valid = validate_user(username, password)
+            user_id = validate_user(username, password)
         except ImportError as e:
             print(f"ERROR: No se pudo importar db_logic - {e}")
             QMessageBox.critical(self, 'Error de importación', f'No se pudo encontrar el módulo de base de datos:\n{e}')
@@ -139,13 +139,13 @@ class LoginWindow(QMainWindow):
             QMessageBox.critical(self, 'Error de conexión', f'No se pudo conectar a la base de datos:\n{e}')
             return
 
-        if valid:
+        if user_id:
             try:
                 from home_ferreconstruction import HomeWindow
-                self.home_window = HomeWindow()
+                self.home_window = HomeWindow(user_id)
                 self.home_window.show()
                 self.close()
-                
+
             except ImportError as e:
                 print(f"ERROR: No se pudo importar home_ferreconstruction - {e}")
                 QMessageBox.critical(self, 'Error', f'No se pudo encontrar la ventana principal:\n{e}')

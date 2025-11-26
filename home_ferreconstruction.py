@@ -5,8 +5,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
 class HomeWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, user_id=None):
         super().__init__()
+        self.user_id = user_id or 1
         self.setWindowTitle("Ferreconstruction - Inicio")
         self.setFixedSize(400, 700)
         self.setStyleSheet("background-color: #C5C9CC;")
@@ -269,8 +270,13 @@ class HomeWindow(QMainWindow):
                 if not id_producto:
                     QMessageBox.warning(self, 'Error', f'No se encontró el producto en la base de datos.')
                     return
-                # id_carrito fijo (ejemplo: 1), cantidad 1
-                ok = add_product_to_cart(id_producto, 1, 1)
+                # obtener o crear carrito para el usuario actual
+                try:
+                    from db_logic import get_or_create_carrito
+                    id_carrito = get_or_create_carrito(self.user_id)
+                except Exception:
+                    id_carrito = 1
+                ok = add_product_to_cart(id_producto, 1, id_carrito)
                 if ok:
                     QMessageBox.information(self, 'Carrito', f'"{nombre}" agregado al carrito')
                 else:
@@ -288,7 +294,7 @@ class HomeWindow(QMainWindow):
     
     def abrir_carrito(self):
         from carrito_ferreconstruction import CarritoWindow
-        self.carrito_window = CarritoWindow()
+        self.carrito_window = CarritoWindow(self.user_id)
         self.carrito_window.show()
     
     def crear_nav_bar(self):

@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                             QHBoxLayout, QLabel, QPushButton, QLineEdit, QScrollArea)
+                             QHBoxLayout, QLabel, QPushButton, QLineEdit, QScrollArea, QMessageBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
@@ -36,8 +36,15 @@ def unregister_cart_listener(cb):
         _cart_listeners.remove(cb)
 
 class CarritoWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, user_id=None):
         super().__init__()
+        self.user_id = user_id or 1
+        # obtener o crear carrito para el usuario
+        try:
+            from db_logic import get_or_create_carrito
+            self.id_carrito = get_or_create_carrito(self.user_id) or 1
+        except Exception:
+            self.id_carrito = 1
         self.setWindowTitle("Ferreconstruction - Carrito")
         self.setFixedSize(400, 700)
         self.setStyleSheet("background-color: #C5C9CC;")
@@ -94,6 +101,7 @@ class CarritoWindow(QMainWindow):
         
         # Botón Comprar ahora
         btn_comprar = QPushButton("Comprar ahora")
+        btn_comprar.clicked.connect(self.on_buy)
         btn_comprar.setStyleSheet("""
             QPushButton {
                 background-color: #8B9DC3;
@@ -252,13 +260,12 @@ class CarritoWindow(QMainWindow):
             cfg = get_db_config()
             conn = pymysql.connect(host=cfg.get('host','localhost'), user=cfg.get('user'), password=cfg.get('password'), database=cfg.get('database'), port=int(cfg.get('port',3306)), connect_timeout=5)
             cursor = conn.cursor()
-            # id_carrito fijo (ejemplo: 1)
             cursor.execute("""
                 SELECT p.nombre, p.precio, ci.cantidad, ci.id_item
                 FROM carrito_items ci
                 JOIN productos p ON ci.id_producto = p.id_producto
                 WHERE ci.id_carrito = %s
-            """, (1,))
+            """, (self.id_carrito,))
             rows = cursor.fetchall()
         except Exception as e:
             rows = []
@@ -294,6 +301,7 @@ class CarritoWindow(QMainWindow):
         header.setLayout(header_layout)
         self.items_layout.addWidget(header)
 
+        total_sum = 0.0
         for nombre, precio, cantidad, id_item in rows:
             row = QWidget()
             row_layout = QHBoxLayout()
@@ -311,6 +319,16 @@ class CarritoWindow(QMainWindow):
             lbl_cantidad.setStyleSheet("color: #2C2C2C; background-color: transparent;")
             row_layout.addWidget(lbl_cantidad)
 
+            # Subtotal por producto
+            try:
+                subtotal = float(precio) * int(cantidad)
+            except Exception:
+                subtotal = 0.0
+            total_sum += subtotal
+            lbl_subtotal = QLabel(f"${subtotal:.2f}")
+            lbl_subtotal.setStyleSheet("color: #2C2C2C; background-color: transparent;")
+            row_layout.addWidget(lbl_subtotal)
+
             row_layout.addStretch()
 
             btn_eliminar = QPushButton("Eliminar")
@@ -325,9 +343,8 @@ class CarritoWindow(QMainWindow):
             """)
             def on_remove(checked=False, item_id=id_item):
                 try:
-                    from db_logic import remove_from_cart
-                    # Elimina solo el item especificado (un registro)
-                    remove_from_cart(item_id)
+                    from db_logic import decrement_item
+                    decrement_item(item_id)
                     self.refresh_cart()
                 except Exception:
                     pass
@@ -335,6 +352,15 @@ class CarritoWindow(QMainWindow):
             row_layout.addWidget(btn_eliminar)
             row.setLayout(row_layout)
             self.items_layout.addWidget(row)
+
+        # Mostrar total del carrito
+        total_widget = QWidget()
+        total_layout = QHBoxLayout()
+        total_layout.setContentsMargins(10, 10, 10, 10)
+        total_layout.addStretch()
+        total_layout.addWidget(QLabel(f"Total: ${total_sum:.2f}"))
+        total_widget.setLayout(total_layout)
+        self.items_layout.addWidget(total_widget)
 
     def closeEvent(self, event):
         # Desregistrar listener cuando la ventana se cierra
@@ -358,6 +384,26 @@ class CarritoWindow(QMainWindow):
         """)
         btn.setFixedSize(40, 40)
         return btn
+
+    def on_buy(self):
+        try:
+            from db_logic import create_ticket_from_cart, generate_ticket_pdf
+            id_ticket = create_ticket_from_cart(self.id_carrito, self.user_id)
+            if not id_ticket:
+                QMessageBox.warning(self, 'Carrito', 'No hay items para comprar')
+                return
+            # Generar PDF en carpeta local
+            import os
+            filename = f"ticket_{id_ticket}.pdf"
+            filepath = os.path.join(os.getcwd(), filename)
+            ok = generate_ticket_pdf(id_ticket, filepath)
+            if ok:
+                QMessageBox.information(self, 'Compra exitosa', f'Compra registrada. Ticket generado: {filename}')
+            else:
+                QMessageBox.information(self, 'Compra exitosa', f'Compra registrada. No se generó PDF.')
+            self.refresh_cart()
+        except Exception as e:
+            QMessageBox.warning(self, 'Error', f'Error al procesar la compra:\n{e}')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
