@@ -306,3 +306,36 @@ def remove_from_cart(id_item):
                 conn.close()
             except Exception:
                 pass
+
+def register_user(username, password, nombre):
+    """Registra un nuevo usuario en la tabla usuarios. Retorna True si se registró exitosamente."""
+    try:
+        from db_config import get_db_config
+        import pymysql
+        cfg = get_db_config()
+        conn = pymysql.connect(
+            host=cfg.get('host', 'localhost'),
+            user=cfg.get('user'),
+            password=cfg.get('password'),
+            database=cfg.get('database'),
+            port=int(cfg.get('port', 3306))
+        )
+        cursor = conn.cursor()
+        # Verificar que el usuario no exista ya
+        cursor.execute("SELECT COUNT(*) FROM usuarios WHERE user=%s", (username,))
+        if cursor.fetchone()[0] > 0:
+            # Usuario ya existe
+            return False
+        # Insertar nuevo usuario
+        query = "INSERT INTO usuarios (user, password, nombre) VALUES (%s, %s, %s)"
+        cursor.execute(query, (username, password, nombre))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error en register_user: {e}")
+        return False
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()

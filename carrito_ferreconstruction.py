@@ -112,6 +112,9 @@ class CarritoWindow(QMainWindow):
                 font-size: 16px;
                 font-weight: bold;
             }
+            QPushButton:hover {
+                background-color: #7A8BAD;
+            }
         """)
         layout.addWidget(btn_comprar)
         

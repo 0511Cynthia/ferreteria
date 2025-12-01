@@ -5,7 +5,7 @@ def get_db_config():
     return {
         'host': os.environ.get('MYSQL_HOST', 'localhost'),
         'user': os.environ.get('MYSQL_USER', 'root'),
-        'password': os.environ.get('MYSQL_PASSWORD', 'jhg/45Lg04'),
+        'password': os.environ.get('MYSQL_PASSWORD', 'Cynthia05#vazquez'),
         'database': os.environ.get('MYSQL_DATABASE', 'ferreteria'),
         'port': int(os.environ.get('MYSQL_PORT', 3306)),
     }

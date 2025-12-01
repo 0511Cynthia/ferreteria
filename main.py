@@ -118,6 +118,22 @@ class LoginWindow(QMainWindow):
         self.login_button.clicked.connect(self.login_clicked)
         main_layout.addWidget(self.login_button)
         
+        # Botón Registrarse
+        register_button = QPushButton("¿No tienes cuenta? Regístrate aquí")
+        register_button.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #3498DB;
+                border: none;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                text-decoration: underline;
+            }
+        """)
+        register_button.clicked.connect(self.abrir_registro)
+        main_layout.addWidget(register_button)
+        
         # intentos permitidos
         self.attempts_remaining = 3
         
@@ -163,6 +179,189 @@ class LoginWindow(QMainWindow):
                 QMessageBox.warning(self, 'Credenciales inválidas',
                                     'Usuario o contraseña incorrectos. No quedan intentos.')
                 QApplication.quit()
+    
+    def abrir_registro(self):
+        """Abre la ventana de registro."""
+        self.register_window = RegisterWindow(self)
+        self.register_window.show()
+
+
+class RegisterWindow(QMainWindow):
+    def __init__(self, login_window):
+        super().__init__()
+        self.login_window = login_window
+        self.setWindowTitle("FERRECONSTRUCTION - Registro")
+        self.setFixedSize(400, 600)
+        self.setStyleSheet("QMainWindow { background-color: #C5C9CC; }")
+        
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(30, 40, 30, 40)
+        main_layout.setSpacing(20)
+        central_widget.setLayout(main_layout)
+
+        # Contenedor del logo
+        logo_container = QWidget()
+        logo_container.setStyleSheet("background-color: white; border-radius: 60px;")
+        logo_container.setFixedSize(120, 120)
+        
+        logo_layout = QVBoxLayout()
+        logo_layout.setContentsMargins(0, 0, 0, 0)
+        logo_container.setLayout(logo_layout)
+
+        # Logo
+        logo_label = QLabel("🏗")
+        logo_label.setAlignment(Qt.AlignCenter)
+        logo_label.setStyleSheet("font-size: 60px; background-color: transparent; padding: 20px;")
+        logo_layout.addWidget(logo_label)
+        
+        logo_h_layout = QHBoxLayout()
+        logo_h_layout.addStretch()
+        logo_h_layout.addWidget(logo_container)
+        logo_h_layout.addStretch()
+        main_layout.addLayout(logo_h_layout)
+        
+        # Título
+        company_label = QLabel("FERRECONSTRUCTION")
+        company_label.setAlignment(Qt.AlignCenter)
+        company_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #2C3E50;")
+        main_layout.addWidget(company_label)
+        
+        # Subtitle
+        subtitle_label = QLabel("Crear cuenta")
+        subtitle_label.setAlignment(Qt.AlignCenter)
+        subtitle_label.setStyleSheet("font-size: 18px; color: #3498DB; margin-bottom: 15px;")
+        main_layout.addWidget(subtitle_label)
+        
+        # Usuario
+        username_label = QLabel("Usuario")
+        username_label.setStyleSheet("font-size: 13px; color: #2C3E50;")
+        main_layout.addWidget(username_label)
+        
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Elige un nombre de usuario")
+        self.username_input.setStyleSheet("""
+            QLineEdit {
+                padding: 30px;
+                border: 2px solid #BDC3C7;
+                border-radius: 8px;
+                background-color: white;
+                font-size: 16px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498DB;
+            }
+        """)
+        main_layout.addWidget(self.username_input)
+        
+        # Nombre completo
+        nombre_label = QLabel("Nombre completo")
+        nombre_label.setStyleSheet("font-size: 13px; color: #2C3E50;")
+        main_layout.addWidget(nombre_label)
+        
+        self.nombre_input = QLineEdit()
+        self.nombre_input.setPlaceholderText("Ingresa tu nombre")
+        self.nombre_input.setStyleSheet("""
+            QLineEdit {
+                padding: 30px;
+                border: 2px solid #BDC3C7;
+                border-radius: 8px;
+                background-color: white;
+                font-size: 16px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498DB;
+            }
+        """)
+        main_layout.addWidget(self.nombre_input)
+        
+        # Contraseña
+        password_label = QLabel("Contraseña")
+        password_label.setStyleSheet("font-size: 13px; color: #2C3E50;")
+        main_layout.addWidget(password_label)
+        
+        self.password_input = QLineEdit()
+        self.password_input.setPlaceholderText("Crea una contraseña")
+        self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.setStyleSheet("""
+            QLineEdit {
+                padding: 30px;
+                border: 2px solid #BDC3C7;
+                border-radius: 8px;
+                background-color: white;
+                font-size: 16px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498DB;
+            }
+        """)
+        main_layout.addWidget(self.password_input)
+        
+        # Botón Registrar
+        register_btn = QPushButton("Registrarse")
+        register_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #27AE60;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                margin-top: 10px;
+            }
+            QPushButton:hover {
+                background-color: #1E8449;
+            }
+        """)
+        register_btn.clicked.connect(self.registrar_clicked)
+        main_layout.addWidget(register_btn)
+        
+        # Botón Volver
+        back_btn = QPushButton("Volver al Login")
+        back_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #3498DB;
+                border: none;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                text-decoration: underline;
+            }
+        """)
+        back_btn.clicked.connect(self.volver_login)
+        main_layout.addWidget(back_btn)
+        
+        main_layout.addStretch()
+    
+    def registrar_clicked(self):
+        """Registra el nuevo usuario."""
+        username = self.username_input.text().strip()
+        nombre = self.nombre_input.text().strip()
+        password = self.password_input.text()
+        
+        if not username or not nombre or not password:
+            QMessageBox.warning(self, 'Campos vacíos', 'Por favor completa todos los campos')
+            return
+        
+        try:
+            from db_logic import register_user
+            success = register_user(username, password, nombre)
+            
+            if success:
+                QMessageBox.information(self, 'Registro exitoso', f'Usuario "{username}" registrado correctamente. Ahora puedes iniciar sesión.')
+                self.volver_login()
+            else:
+                QMessageBox.warning(self, 'Error de registro', f'El usuario "{username}" ya existe. Intenta con otro nombre de usuario.')
+        except Exception as e:
+            QMessageBox.critical(self, 'Error de conexión', f'No se pudo registrar el usuario:\n{e}')
+    
+    def volver_login(self):
+        """Vuelve a la ventana de login."""
+        self.close()
 
 
 def validate_credentials(user, password):
